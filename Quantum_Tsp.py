@@ -1,12 +1,9 @@
-# use qubit to solve TSP problem using OOP
-
 import random
 
 import matplotlib.pyplot as plt
 import numpy as np
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit import execute, Aer
-import time
 
 
 # define the class of city
@@ -114,6 +111,7 @@ def get_fitness(counts, city_list):
         city_index = [int(i) for i in state]
         city_list = [city_list[i] for i in city_index]
         tour = Tour(city_list)
+        np.seterr(divide='ignore', invalid='ignore')
         fitness.append(1 / tour.distance)
     return fitness
 
@@ -133,58 +131,41 @@ def QGA(city_list, generation):
     return city_list
 
 
-fig = plt.figure(figsize=(10, 5))
-ax1 = fig.add_subplot(121)
-ax2 = fig.add_subplot(122)
-
-# define the main function
-if __name__ == '__main__':
-    city_list = []
-    for i in range(10):
-        city_list.append(City(random.randint(0, 100), random.randint(0, 100)))
-    start = time.time()
-    population = []
-    for i in range(100):
-        city_list_copy = city_list.copy()
-        random.shuffle(city_list_copy)
-        population.append(Tour(city_list_copy))
-    population = Population(population)
-    population = GA(population, 100)
-    end = time.time()
-    print("GA:")
-    print(population)
-    print("time:", end - start)
+# plot the result of GA and QGA on the same figure on the graph draw the line between the cities in 3d space
+def plot(city_list, algorithm):
+    global city
     x = []
     y = []
-    for i in population.tour_list[0].city_list:
-        x.append(i.x)
-        y.append(i.y)
-    x.append(population.tour_list[0].city_list[0].x)
-    y.append(population.tour_list[0].city_list[0].y)
-    ax1.plot(x, y, color='b')
-    ax1.scatter(x, y, color='r')
-    ax1.set_title("GA")
-    ax1.set_xlabel("x")
-    ax1.set_ylabel("y")
-
-    start = time.time()
-    city_list = QGA(city_list, 100)
-    end = time.time()
-    print("QGA:")
-    print(city_list)
-    print("time:", end - start)
-    x = []
-    y = []
-    for i in city_list:
-        x.append(i.x)
-        y.append(i.y)
+    for city in city_list:
+        x.append(city.x)
+        y.append(city.y)
     x.append(city_list[0].x)
     y.append(city_list[0].y)
-    ax2.plot(x, y, color='b')
-    ax2.scatter(x, y, color='r')
-    ax2.set_title("QGA")
-    ax2.set_xlabel("x")
-    ax2.set_ylabel("y")
+    plt.plot(x, y, 'ro-')
+    plt.title(algorithm)
     plt.show()
 
 
+# define the main function
+def main():
+    city_list = []
+    for i in range(10):
+        city_list.append(City(random.randint(0, 100), random.randint(0, 100)))
+    print("The city list is: ", city_list)
+    tour_list = []
+    for i in range(100):
+        tour = Tour(random.sample(city_list, len(city_list)))
+        tour_list.append(tour)
+    population = Population(tour_list)
+    population = GA(population, 100)
+    print("The result of GA is: ", population.tour_list[0])
+    plot(population.tour_list[0].city_list, "GA")
+    city_list = QGA(city_list, 100)
+    print("The result of QGA is: ", city_list)
+    plot(city_list, "QGA")
+
+    # run the main function
+
+
+if __name__ == "__main__":
+    main()
